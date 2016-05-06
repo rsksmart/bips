@@ -24,10 +24,12 @@ It's also possible to use the segwit script versioning system to define a new op
 
 At any time there can be zero or more active ack-polls. Each ack-poll is associated with a transaction candidate. Miners that want to ack for one or more candidates embed the message tag “ACK:” followed by a serialized FULL_ACK_LIST. The grammar of FULL_ACK_LIST is the following:
 
+<pre>
 FULL_ACK_LIST: { CHAIN_ACK_LIST... }
 CHAIN_ACK_LIST: { secondary_chain_id ACK_LIST }
 ACK_LIST: { ACK... }
 ACK: tx_hash [ tx_hash_pre ]
+</pre>
 
 In this grammar:
 - { x... } is interpreted as a list of items of type x. Every item in a list has the same format, and only one format is expected for each item. Therefore, the parser can distinguish between individual items and lists of items.
@@ -52,17 +54,19 @@ Example
 -------
 
 The following coinbase tags in successive blocks create 5 different proposals:
-
+<pre>
 1) ACK: {{ DRVCOIN {{0xbaa501b37267c06d8d20f316622f90a3e343e9e730771f2ce2e314b794e31853 0x101010....10}}}} 
 2) ACK: {{ DRVCOIN {{0x85e7eac2862f1cbd85bc18769c75172c3fdcd899ab468b9e973d59ec620d9991 0x202020....20}}}}
 3) ACK: {{ DRVCOIN {{0x84e0c0eafaa95a34c293f278ac52e45ce537bab5e752a00e6959a13ae103b65a 0x303030....30}}}}
 4) ACK: {{ YCOIN   {{0x92b7eb5290d8d6e3ac79215cb4bdb07fe89629ee720be4332b3daa842b7ec80a 0x404040....40}}}}
 5) ACK: {{ XCOIN   {{0xb37361a0be8af8905de1f4384e701365ece4313dd5e064d375eb2851c043ba68 0x505050....50}}}}
-
+</pre>
 (First element is chain_id, second element is transaction hash proposal and third element is transaction hash pre-image)
 
 The following block contains the tag: 
+<pre>
 6) ACK: { { DRVCOIN {{0xba} {0x84e0}} } { XCOIN {{0xff}}} }
+</pre>
 
 This last tag acks for the proposal 1, for proposal 3, against the proposal 2, against the proposal 5 (because the ack does not have a candidate) and ignores the proposal 4 (for YCOIN). The ack for proposal 3 is not using the minimum possible prefix (0x84), but it is still a valid ack.
 
