@@ -81,7 +81,7 @@ The opcode has the following arguments:
 * pubkey(0) … pubkey(N-1)
 * signature_ack_weight
 * secondary_chain_id 
-* voting_period (in blocks)
+* ack_period (in blocks)
 * liveness_period (in blocks)
 * min_number_of_positive_acks
 * max_number_of_negative_acks 
@@ -96,8 +96,8 @@ Description of arguments:
 * signature_ack_weight is the number of acks that each signature adds. For example, if signature_ack_weight is 4, then each signature represents the acks of 4 blocks (4 miner's acks). 
 * The min_number_of_sigs is the minimum number of signatures that must be present. If min_number_of_sigs is greater than zero, it allows the set of notaries to have veto power for any proposal presented by the majority of the miners. 
 * secondary_chain_id is a blob that identifies the drivechain (e.g "PrivateBitcoin" for a drivechain that implements the zCash protocol).
-* voting_period represents the number of blocks after the proposal is published where acks are counted. After this number of blocks, any ack for the proposal is discarded. voting_period valid range is [1..144].
-* liveness_period represents the number of blocks after the voting_period ends where the transaction specified by the proposal is valid. Liveness_period range is [1..144]. The spending transaction can be included in the same block where the ack-ing ends.  
+* ack_period represents the number of blocks after the proposal is published where acks are counted. After this number of blocks, any ack for the proposal is discarded. ack_period valid range is [1..144].
+* liveness_period represents the number of blocks after the ack_period ends where the transaction specified by the proposal is valid. Liveness_period range is [1..144]. The spending transaction can be included in the same block where the ack-ing ends.  
 * min_number_of_positive_acks represents the minimum amount of positive acks a proposal must receive to be accepted. 
 * max_number_of_negative_acks represents the maximum amount of negative miner acks a proposal can receive to be accepted.
 * positive_acks_difference represents the minimum excess of positive acks over negative acks to accept the proposal.
@@ -124,7 +124,7 @@ All argument conditions must be met for the execution to be able to continue. If
 * pubkey(0) … pubkey(N-1) blobs that must be well-formatted 
 * signature_ack_weight integer in [0..1000]
 * secondary_chain_id blob with length in [1..20]
-* voting_period (in blocks) integer in [1..max_voting_period]. max_voting_period is 144.
+* ack_period (in blocks) integer in [1..max_ack_period]. max_ack_period is 144.
 * liveness_period (in blocks) integer in [1..max_liveness_period]. max_liveness_period is 144.
 * min_number_of_positive_acks integer in [1..2^30]
 * max_number_of_negative_acks integer in [1..2^30]
@@ -143,8 +143,8 @@ Let spend_tx_hash be the hash of the transaction that is used to spend the outpu
 The following pseudo-code specifies ack-counting algorithm and returns (miner_positive_acks,miner_negative_acks):
 
 ```
-1. Let poll_start :=n-liveness_period-voting_period
-2. For i :=poll_start to poll_start+voting_period-1 do
+1. Let poll_start :=n-liveness_period-ack_period
+2. For i :=poll_start to poll_start+ack_period-1 do
 2.1. C := GetCoinBaseFieldOfBlock(i)
 2.2. Find tag "ACK:" in C.
 2.3. if not (C contains valid "ACK:" tag and payload) then continue
@@ -309,7 +309,7 @@ If bitcoins are locked for a secondary chain using a different set of parameters
 
 There CAV opcode can not be used as a vector to perform a denial-of-service by exhausting CPU nor exhausting memory since:
 
-- The maximum number of blocks processed is 144 (max_voting_period)
+- The maximum number of blocks processed is 144 (max_ack_period)
 - The maximum number of different candidates that can be created per block is 1 (100 bytes/66 bytes).
 - The maximum number of acks that can be included per block is 50 (100 bytes/2 bytes).
 - The maximum number of different acks that can be created in total is 144.
