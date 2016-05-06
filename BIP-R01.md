@@ -107,7 +107,7 @@ Description of arguments:
 OP_CHECK_ACKS_VERIFY performs four stages of computation: 
 
 1. Opcode arguments validation. Arguments are validated against pre-established bounds. if not in range, the script is aborted.
-2. Miner's Vote counting. 
+2. Miner's ack counting. 
 3. Signer's ack counting.
 4. Poll condition verification.
 
