@@ -141,7 +141,8 @@ Let secondary_chain_id be the chain id that is being evaluated. Let A be a vecto
 Let spend_tx_hash be the hash of the transaction that is used to spend the output that contains the OP_CHECK_ACKS_VERIFY being executed.
 
 The following pseudo-code specifies ack-counting algorithm and returns (miner_positive_acks,miner_negative_acks):
-<pre>
+
+```
 1. Let poll_start :=n-liveness_period-voting_period
 2. For i :=poll_start to poll_start+voting_period-1 do
 2.1. C := GetCoinBaseFieldOfBlock(i)
@@ -178,7 +179,7 @@ The following pseudo-code specifies ack-counting algorithm and returns (miner_po
 3. If there is no index t so that A[t].key = spend_tx_hash then return 0, and exit
 4. Let t be the first index where A[t].key = spend_tx_hash.
 5. Return (A[t].pos_acks, A[t].neg_acks)
-</pre>
+```
 
 The sliding-window nature of this ack-ing system means that miners must not stop ack-ing positively or negatively when a negative or positive threshold is reached, if new proposals are included (new proposals are identified by a non-empty tx_hash_pre). 
 Step 2.5.1.3.6.2.1 is an optimization optimization step. If included, then acks for spend_tx_hash will be counted correctly, but acks for other candidates will not.
@@ -187,7 +188,8 @@ Signer's ack counting Stage
 ----------------------------
 
 After a miners acks have been counted, the multisig acks must be counted. This is done by the following algorithm that returns signatories_acks:
-<pre>
+
+```
 1. Let pubkeys := [] // set of used pubkeys
 2. Let count :=0
 3. For i :=0 to provided_signatures-1 do
@@ -196,7 +198,7 @@ After a miners acks have been counted, the multisig acks must be counted. This i
 3.3. if (P in pubkeys) then abort script
 3.4. count :=count+1
 4. Return count
-</pre>
+```
 
 Poll Conditions verification Stage
 ----------------------------------
@@ -213,7 +215,8 @@ The following conditions must be met for the opcode to continue execution:
  
 Ack de-serialization pseudo-code
 ---------------------------------
-<pre>
+
+```
 ReadElement(string source) -> (string result,string tail)
 
 1. (len,rest) :=ReadCompactUint(source); // if invalid CompactUInt, raise exception
@@ -250,14 +253,14 @@ ReadAcks(string s) -> (ACK_LIST)
 5.4.6.3. if (length(a)>0) then raise exception
 5.4.7. inc(j)
 5.5. inc(i)
-</pre>
+```
 
 Examples
 --------
 
 In this example a redeem script containing two signatures (but no miner's acks, is shown)
 
-<pre> 
+``` 
 scriptSig: 
 	2 04fdf4907810a9f5d9462a1ae09feee5ab205d32798b0ffcc379442021f84c5bbfc891eb16b0faef4bef99ba6d522fb85470a20df730808e583778aa35c7af98f5	049ebd374eea3befddf46bbb182e291fb719ee1b705b0b7802161038eb7da8a036b96891c93bd45e9aadea192fa13f763e07dd92d70d6332edc27bbd82cfb63651
 	37
@@ -270,15 +273,16 @@ scriptSig:
 	0
 	1
 	OP_CHECK_ACKS_VERIFY
-</pre>	
+```
 
-<pre>
+```
 scriptSig:
 	
-	<signature for pubkey 04fdf4907810a9f5...>
-	<signature for pubkey 049ebd374eea3bef...>
+	{signature for pubkey 04fdf4907810a9f5...}
+	{signature for pubkey 049ebd374eea3bef...}
 	2
-</pre>	
+```	
+
 ==Rationale==
 
 The benefit of CAV is that it allows to bootstrap a merged-mining cryptocurrency from having no merge-mining engagement to a high merge-mining engagement filling the missing security with notary acks.  When a high merge-mining engagement is reched, the notaries can cese to provide acks or they can continue to contribute to the security of the drivechain, depending on the design choices of the secondary chain creators. Initially, if there is no merge-mining engagement, the notaries have control of the funds, but the scriptPub can be parametrized such that a threshold of signatures is required to control them, so that still no individual notary has control. There is no point in allowing the notaries to ack against a proposal. This is because the 51% of the miners can censor negative acks, so security is not increased. If min_number_of_sig is set to zero, 51% of the miners have full control of the locked funds.
