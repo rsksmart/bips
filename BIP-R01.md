@@ -199,7 +199,7 @@ After a miners acks have been counted, the multisig acks must be counted. This i
 ```
 1. Let pubkeys := [] // set of used pubkeys
 3. For i :=0 to provided_signatures-1 do
-3.1. Let P :=sig_pk_index(i)
+3.1. Let P :=pubkey(sig_pk_index(i))
 3.2. if (P in pubkeys) then abort script
 3.3. pubkeys.add(P)
 3.4. Verify signature sig(i) against pubkey P. If invalid, abort.
