@@ -101,7 +101,7 @@ Description of arguments:
 * The min_number_of_sigs is the minimum number of signatures that must be present. If min_number_of_sigs is greater than zero, it allows the set of notaries to have veto power for any proposal presented by the majority of the miners. 
 * secondary_chain_id is a blob that identifies the drivechain (e.g "PrivateBitcoin" for a drivechain that implements the zCash protocol).
 * ack_period represents the number of blocks after the proposal is published where acks are counted. After this number of blocks, any ack for the proposal is discarded. ack_period valid range is [1..144].
-* liveness_period represents the number of blocks after the ack_period ends where the transaction specified by the proposal is valid. Liveness_period range is [1..144]. The spending transaction can be included in the same block where the ack-ing ends.  
+* liveness_period represents the number of blocks after the ack_period ends where the transaction specified by the proposal is valid. Liveness_period range is [100..144]. Therefore the spending transaction can be included not before than 100 blocks after the ack-ing period ends. The 100 block forced confirmation gap is required so the maturity of a transaction consuming an output using a script that contains the CAV opcode is equal or higher than the maturity of coinbase outputs. 
 * min_number_of_positive_acks represents the minimum amount of positive acks a proposal must receive to be accepted. 
 * max_number_of_negative_acks represents the maximum amount of negative miner acks a proposal can receive to be accepted.
 * positive_acks_difference represents the minimum excess of positive acks over negative acks to accept the proposal.
@@ -322,6 +322,10 @@ There CAV opcode can not be used as a vector to perform a denial-of-service by e
 - The maximum number of loop iterations (hash prefix comparisons) while counting acks is 144.
  
 In comparison, a script can use up to 400*10K bytes of stack, totalling 4M bytes.
+
+==Computational Cost==
+
+The cost of the CAV opcode in terms of sigops is set to be the number of signatures provided as argument (independently if they are actually verified or not) plus 1. The rationale of this selection is the following: Performing the ack counting requires fetching at most 144 recent generation transactions, and verifying at most 20 signatures. The maximum amount of information that has to be fetched from memory is 7.2K bytes. Assuming the most recent 288 coinbase fields can be kept cached in-memory (either by the OS or by the application), then coinbase fetching CPU cost is comparable to the cost of a single signature check. Assuming no cache, and a 10 msec per coinbase fetching time, the fetching cost becomes prohibitive, unless transaction verification is amortized by parallelization. Therefore, the Bitcoin implementation should cache the coinbase fields of generation transactions. Because the performance of ack counting may vary on different protocol implementations, we allow the the order of poll stages (miner acks and notaries acks) to be selected by the implementer and we allow the implementer to short-circuit the evaluation of the poll if any stage yields less than the minimum number of acks required.  Therefore, the cost in sigops of the opcode is set to be fixed depending on the number of signatures provided, independently if they are actually verified or not.  
 
 ==Forwards Compatibility ==
 
