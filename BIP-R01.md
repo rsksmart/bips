@@ -79,8 +79,9 @@ The opcode NOP? is redefined as OP_CHECK_ACKS_VERIFY (CAV). This opcode scans a 
 The opcode has the following arguments:
 
 
-* sig(0) … sig(M-1)        (provided by scriptSig)
-* provided_signatures (M)  (provided by scriptSig)
+* sig(0) … sig(M-1)        		   (provided by scriptSig)
+* sig_pk_index(0) … sig_pk_index(M-1) (provided by scriptSig)
+* provided_signatures (M)  	          (provided by scriptSig)
 * number_of_public_keys (N)
 * pubkey(0) … pubkey(N-1)
 * signature_ack_weight
@@ -96,6 +97,7 @@ The opcode has the following arguments:
 Description of arguments:
 
 * The argument number_of_public_keys is similar to the CHECKMULTISIG opcode. 
+* sig_pk_index() are the indexes of the pubkeys in pubkey() related to each signature provided (zero based). E.g. if sig_pk_index(0) is 1, it means that sig(0) is the signature related to pubkey(1).
 * The argument present_signatures is the number of signatures that follows in the scriptSig (M). 
 * signature_ack_weight is the number of acks that each signature adds. For example, if signature_ack_weight is 4, then each signature represents the acks of 4 blocks (4 miner's acks). 
 * The min_number_of_sigs is the minimum number of signatures that must be present. If min_number_of_sigs is greater than zero, it allows the set of notaries to have veto power for any proposal presented by the majority of the miners. 
@@ -123,7 +125,8 @@ Opcode arguments validation Stage
 All argument conditions must be met for the execution to be able to continue. If not, then the script execution is aborted (and the script does not verify):
 
 * provided_signatures(M) integer in [0..20] 
-* sig(0) … sig(M-1) blobs that must be well-formatted signatures.       
+* sig(0) … sig(M-1) blobs that must be well-formatted signatures.  
+* sig_pk_index(0) … sig_pk_index(M-1) are in range [0..N-1]  
 * number_of_public_keys integer in [0..20]
 * pubkey(0) … pubkey(N-1) blobs that must be well-formatted 
 * signature_ack_weight integer in [0..1000]
@@ -195,13 +198,12 @@ After a miners acks have been counted, the multisig acks must be counted. This i
 
 ```
 1. Let pubkeys := [] // set of used pubkeys
-2. Let count :=0
 3. For i :=0 to provided_signatures-1 do
-3.1. Extract public key from sig(i) into P using key-recovery algorithm, if signature does not verify abort.
-3.2. if not (P in [pubkey(0) … pubkey(N-1)]) then abort script
-3.3. if (P in pubkeys) then abort script
-3.4. count :=count+1
-4. Return count
+3.1. Let P :=sig_pk_index(i)
+3.2. if (P in pubkeys) then abort script
+3.3. pubkeys.add(P)
+3.4. Verify signature sig(i) against pubkey P. If invalid, abort.
+4. Return provided_signatures
 ```
 
 Poll Conditions verification Stage
@@ -284,6 +286,8 @@ scriptSig:
 	
 	{signature for pubkey 04fdf4907810a9f5...}
 	{signature for pubkey 049ebd374eea3bef...}
+	0
+	1
 	2
 ```	
 
