@@ -222,10 +222,6 @@ scriptSig:
 	144
 	144
 	OP_COUNT_ACKS    // Results in a stack that contains: 100 25
-```
-
-```
-scriptSig:
 	OP_2DUP	   // duplicate ack counts
 	OP_GREATERTHAN   // more positive than negative acks ?
 	OP_VERIFY	   // abort if not
