@@ -5,6 +5,7 @@
   Status: Draft
   Type: Standards Track
   Created: 2016-05-06
+  Version: 1.1
 </pre>
 
 ==Abstract==
@@ -17,7 +18,7 @@ Bitcoin aims to be both a decentralized settlement/payment system (the network) 
 This has not prevented innovation within the Bitcoin community. Nevertheless, most of the new ideas must be held forever or end up being captured by competing alt-coins. 
 The Sidechain method was proposed to improve Bitcoin with low impact in its security, allowing adding functionality to Bitcoin (the currency) but isolating sidechain's potential vulnerabilities from the Bitcoin network. However, adding generic  sidechain integration to Bitcoin is complex and no generic proposal has been published. In the particular case that the sidechain is merge-mined, and there is high engagement in merge-mining, sidechains do not provide more security for the "algorithmic custody" of transferred bitcoins than basing the algorithmic-custody on a counting acknowledge tags appended by the Bitcoin miners to their blocks. This concept has been defined as a Drivechain.
 
-We propose a soft-fork that defines a new opcode (redefining a NOP opcode) as the OP_COUNT_ACKS using the segwit script versioning system. Several opcode arguments allow the drivechain creator to specify the ack weights.
+We propose a soft-fork that defines a new opcode (redefining a NOP opcode) as the OP_COUNT_ACKS using the segwit script versioning system (e.g. version 1 scripts). 
  
 ==Specification==
 
@@ -27,7 +28,7 @@ At any time there can be zero or more active ack-polls. Each ack-poll is associa
 FULL_ACK_LIST: { CHAIN_ACK_LIST... }
 CHAIN_ACK_LIST: { secondary_chain_id ACK_LIST }
 ACK_LIST: { ACK... }
-ACK: tx_hash [ tx_hash_pre ]
+ACK: tx_hash_prefix [ tx_hash_preimage ]
 </pre>
 
 In this grammar:
@@ -44,9 +45,9 @@ The tag and payload are stored in the coinbase field of their coinbase transacti
 
 * secondary_chain_id is blob that identifies the secondary chain. 
 * tx_hash_prefix is the transaction ID (double SHA256 hash) or a prefix of the transaction ID for the transaction that is proposed (in the secondary chain) to spend the locked bitcoins.
-* tx_hash_pre is the single SHA256 pre_image of the tx_hash_prefix. If the pre_image has already been shown in a previous ack (when the candidate is created), this field should be left out. This is for preventing miners easily creating proposals that match another proposal prefix.
+* tx_hash_preimage is the single SHA256 pre-image of the tx_hash_prefix. If the pre-image has already been shown in a previous ack (when the candidate is created), this field should be left out. This is for preventing miners easily creating proposals that match another proposal prefix. If the pre-image is given, then the tx_hash_prefix must be empty. Nodes must compute the SHA256 hash of tx_hash_prefix to obtain tx_hash. This saves space in the coinbase.
 
-Note that the miner that acks a transaction have "pays" an amount in fees because of the block space consumed by the proposal (e.g. approximately 70 additional bytes for a new proposal, but can be as low as a 10 bytes). However, this is low and can be ignored.
+Note that the miner that acks a transaction "pays" an amount in fees because of the block space consumed by the proposal (e.g. approximately 33 additional bytes for a new proposal, but can be as low as a 10 bytes). However, this is low and can be ignored.
 By not including an ack for a proposal for a secondary_chain_id means that proposal gets a negative ack.
 
 Example 1 
@@ -54,13 +55,13 @@ Example 1
 
 The following coinbase tags in successive blocks create 5 different proposals:
 <pre>
-1) ACK: {{ DRVCOIN {{0xbaa501b37267c06d8d20f316622f90a3e343e9e730771f2ce2e314b794e31853 0x101010....10}}}} 
-2) ACK: {{ DRVCOIN {{0x85e7eac2862f1cbd85bc18769c75172c3fdcd899ab468b9e973d59ec620d9991 0x202020....20}}}}
-3) ACK: {{ DRVCOIN {{0x84e0c0eafaa95a34c293f278ac52e45ce537bab5e752a00e6959a13ae103b65a 0x303030....30}}}}
-4) ACK: {{ YCOIN   {{0x92b7eb5290d8d6e3ac79215cb4bdb07fe89629ee720be4332b3daa842b7ec80a 0x404040....40}}}}
-5) ACK: {{ XCOIN   {{0xb37361a0be8af8905de1f4384e701365ece4313dd5e064d375eb2851c043ba68 0x505050....50}}}}
+1) ACK: {{ DRVCOIN {{{} 0x101010....10}}}} pre-image of 0xbaa501b37267c06d8d20f316622f90a3e343e9e730771f2ce2e314b794e31853 
+2) ACK: {{ DRVCOIN {{{} 0x202020....20}}}} pre-image of 0x85e7eac2862f1cbd85bc18769c75172c3fdcd899ab468b9e973d59ec620d9991
+3) ACK: {{ DRVCOIN {{{} 0x303030....30}}}} pre-image of 0x84e0c0eafaa95a34c293f278ac52e45ce537bab5e752a00e6959a13ae103b65a
+4) ACK: {{ YCOIN   {{{} 0x404040....40}}}} pre-image of 0x92b7eb5290d8d6e3ac79215cb4bdb07fe89629ee720be4332b3daa842b7ec80a
+5) ACK: {{ XCOIN   {{{} 0x505050....50}}}} pre-image of 0xb37361a0be8af8905de1f4384e701365ece4313dd5e064d375eb2851c043ba68
 </pre>
-(First element is chain_id, second element is transaction hash proposal and third element is transaction hash pre-image)
+(First element is chain_id, second element is transaction hash proposal (empty) and third element is transaction hash proposal pre-image)
 
 The following block contains the tag: 
 <pre>
@@ -131,12 +132,12 @@ The following pseudo-code specifies ack-counting algorithm and returns (miner_po
 2.5.1.3. For k :=0 to Length(ack_list)-1 do
 2.5.1.3.1. ack :=ack_list[k]
 2.5.1.3.2. tx_hash :=ack[0]
-2.5.1.3.3. tx_hash_pre :=ack[1]
-2.5.1.3.4. valid :=((Length(tx_hash)<=32) AND (length(tx_hash_pre)=0)) OR ((Length(tx_hash)=32) AND (length(tx_hash_pre)=32) AND (SHA256(tx_hash_pre)=tx_hash)) 
+2.5.1.3.3. tx_hash_preimage :=ack[1]
+2.5.1.3.4. valid :=((Length(tx_hash)<=32) AND (length(tx_hash_preimage)=0)) OR ((Length(tx_hash)=32) AND (length(tx_hash_preimage)=32) AND (SHA256(tx_hash_preimage)=tx_hash))  /// Chenge this to allow empty tx_hash in proposals
 2.5.1.3.5. if not valid then
 2.5.1.3.5.1. continue 
 2.5.1.3.6. if not (tx_hash is a prefix of any key in A) then
-2.5.1.3.6.1. if length(tx_hash_pre)=32 then
+2.5.1.3.6.1. if length(tx_hash_preimage)=32 then
 2.5.1.3.6.1.1. A.Append(tx_hash,0) // tx_hash is key, 0 is initial ack count (decremented later)
 2.5.1.3.6.1.2. new_acks.add(Length(A)-1)
 2.5.1.3.6.2. else
@@ -156,7 +157,7 @@ The following pseudo-code specifies ack-counting algorithm and returns (miner_po
 5. Return (A[t].pos_acks, A[t].neg_acks)
 ```
 
-The sliding-window nature of this ack-ing system means that miners must not stop ack-ing positively or negatively when a negative or positive threshold is reached, if new proposals are included (new proposals are identified by a non-empty tx_hash_pre). 
+The sliding-window nature of this ack-ing system means that miners must not stop ack-ing positively or negatively when a negative or positive threshold is reached, if new proposals are included (new proposals are identified by a non-empty tx_hash_preimage). 
 Step 2.5.1.3.6.2.1 is an optimization optimization step. If included, then acks for spend_tx_hash will be counted correctly, but acks for other candidates will not.
 
  
@@ -207,7 +208,7 @@ Examples
 
 <pre>
 Let the blockchain have only the following tags (line format: block-number,  tag):
-101, ACK: {{ XCOIN {{0xbaa501b37267c06d8d20f316622f90a3e343e9e730771f2ce2e314b794e31853 0x101010....10}}}} 
+101, ACK: {{ XCOIN {{{} 0x101010....10}}}} // pre-image of 0xbaa501b37267c06d8d20f316622f90a3e343e9e730771f2ce2e314b794e31853 
 102, ACK: {{ XCOIN {{0xba}} }} // 2nd positive vote
 ... block 103..200 having the same tag as block 102..
 201, ACK: {{ XCOIN {{ }} }}  // negative vote
@@ -230,6 +231,9 @@ scriptSig:
 	OP_GREATERTHAN   // More than 50% positive difference, put 1 on stack, else put 0	
 ```	
 
+``` 
+scriptPub: <empty>
+``` 
 
 ==Rationale==
 
@@ -241,18 +245,18 @@ The liveness period and ack period limits reduces the depth to which the COUNT_A
 
 ==Backwards Compatibility==
 
-Transactions containing the COUNT_ACKS opcode are non-standard to old implementations, which will (typically) not relay them nor include them in blocks.
+Transactions containing the COUNT_ACKS opcode are non-standard to old implementations, which will (typically) not relay them nor include them in blocks. Witness P2SH addresses can be used to allow the propagation of transactions that use COUNT_ACKS. 
 
-Old implementations will validate that COUNT_ACKS as OP_NOP. This implies this BIP represents a soft-fork.
-Miners that do not soft-fork and do not include non-standard transactions are not affected, since no consensus rule is added to the block header or coinbase validation.
+This implies this BIP represents a soft-fork since  it is based on Segwit script versioning system.
+Miners that do not soft-fork and do not include non-standard transactions are not affected, since no consensus rule is added to the block header or coinbase validation. Miners that do not soft-fork but include non-stadard transactions provided by an malicius users can be attacked so that their blocks are not accepted by the majority of miners.
 
 This BIP will be deployed using a standard majority threshold (as used in previous soft-forks) and will use the version bits to mark miners acks (as defined in BIPn).
 
 If a majority of hashing power does not support the new validation rules, then roll-out will be postponed (or rejected if it becomes clear that a majority will never be achieved).
 
-==Broadcasting a transaction containing OP_ACK_COUNT in scriptSigs==
+==Broadcasting a transaction containing OP_ACK_COUNT in scriptPubs==
 
-Transactions containing the OP_ACK_COUNT in scriptSigs are non-standard and should not be broadcast. Only miners should be able to include these transactions in blocks. 
+Transactions containing the OP_ACK_COUNT in scriptPubs are non-standard and should not be broadcast. Secondary chain designers should use P2SH addresses, so that miners can include the scriptPub scripts in ScriptSig scripts.
 
 ==Security ==
 
@@ -262,18 +266,20 @@ If bitcoins are locked for a secondary chain using a different set of parameters
 There COUNT_ACKS opcode can not be used as a vector to perform a denial-of-service by exhausting CPU nor exhausting memory since:
 
 - The maximum number of blocks processed is 144 (max_ack_period)
-- The maximum number of different candidates that can be created per block is 1 (100 bytes/66 bytes).
+- The maximum number of different candidates that can be created per block is 3 (100 bytes/33 bytes=3).
 - The maximum number of acks that can be included per block is 50 (100 bytes/2 bytes).
 - The maximum number of different acks that can be created in total is 144.
 - The size consumed in memory by each stored candidate is approximately 50 bytes.
 - The maximum memory consumed by the ack counting algorithm is 7.2K bytes.
-- The maximum number of loop iterations (hash prefix comparisons) while counting acks is 144.
+- The maximum number of hash prefix comparisons while counting acks is 144*50=7200.
+- The maximum number of candidate hashes that need to be performed is 3*144 = 432.
  
 In comparison, a script can use up to 400*10K bytes of stack, totalling 4M bytes.
 
 ==Computational Cost==
 
-The cost of the COUNT_ACKS opcode in terms of sigops is set to be 1. The rationale of this selection is the following: Performing the ack counting requires fetching at most 144 recent generation transactions. The maximum amount of information that has to be fetched from memory is 7.2K bytes. Assuming the most recent 288 coinbase fields can be kept cached in-memory (either by the OS or by the application), then coinbase fetching CPU cost is comparable to the cost of a single signature check. Assuming no cache, and a 10 msec per coinbase fetching time, the fetching cost becomes prohibitive, unless transaction verification is amortized by parallelization. Therefore, the Bitcoin implementation should cache the coinbase fields of generation transactions. 
+The cost of the COUNT_ACKS opcode in terms of sigops is set to be 2. The rationale of this selection is the following: Performing the ack counting requires fetching at most 144 recent generation transactions. The maximum amount of information that has to be fetched is 7.2K bytes. Assuming the most recent 288 coinbase fields can be kept cached in-memory (either by the OS or by the application), then coinbase fetching CPU cost is comparable to the cost of a single signature check. Assuming no cache, and a 10 msec per coinbase fetching time, the fetching cost becomes prohibitive, unless transaction verification is amortized by parallelization. Therefore, the Bitcoin implementation should cache the coinbase fields of generation transactions. The maximum cost in hashing of tx_hash_preimage values to obtain the corresponding tx_hash values is 432 hash digests, each of a message of size 32. This is comparable to the cost of a single signature verifications.
+Therefore, the accumulated maximum cost is comparable to 2 signature verifications.
 
 ==Forwards Compatibility ==
 
