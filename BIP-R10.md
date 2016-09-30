@@ -261,7 +261,7 @@ The system was designed with the following properties in mind:
 3. No additional computation during blockchain management and re-organization
 4. No change in Bitcoin security model
 5. Bounded computation of polls
-6. Strong protection to DoS
+6. Strong protection from DoS attacks
 7. Minimum block space consumption
 8. Zero risk of cross-secondary chain invalidation
 
@@ -292,8 +292,8 @@ Bounded computation of polls
 
 The liveness period and ack period limits reduces the depth to which the COUNT_ACKS opcode retrieves coinbase fields. This has two benefits: first sets a bound to the running time of the opcode and second it allows tags in blocks older than the compound limit to be forget and soit is compatible with prunning. 
 
-Strong protection to DoS
-------------------------
+Strong protection from DoS attacks
+----------------------------------
 
 Polls created for unknown secondary chains can be safely ignored by miners. Unknown or fake transaction created by malicious miners candidates do interfere with honest candidates nor not require honest miners to add any special information to the ack tags, since any candidate that is omitted from the tag is negatively acknowledged, if the secondary chain id is included.
 
