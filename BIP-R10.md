@@ -8,11 +8,13 @@
   Version: 1.2
 </pre>
 
-==Abstract==
+Abstract
+========
 
 This BIP describes the new opcode OP_COUNT_ACKS that adds Bitcoin drivechain capabilities as a soft-fork. A drivechain is practical and low-complexity extension method to add user-defined functionality executed in a secondary blockchain to Bitcoin, by means of a 2-way-peg. Also this drivechain system allows the use of hybrid two-pay pegs, such as combining a drivechain with a set of notary signatures. 
 
-==Motivation==
+Motivation
+==========
 
 Bitcoin aims to be both a decentralized settlement/payment system (the network) and a store of value (the currency). The Bitcoin network works 24/7 to keep safe billion of dollars. Therefore, there is little room for experiment and ground-breaking changes in the protocol: improving Bitcoin (the network) has been compared to repairing a plane during flight. 
 This has not prevented some innovation within the Bitcoin community. Nevertheless, most of the new ideas must wait until there is a clear use case. There is little economic incentive to develop a new use case if it will depend on a new feature, so so there is a chicken-and-egg problem. Finally most new ideas end up being captured by alt-coins with lower probability of success. 
@@ -31,7 +33,8 @@ A miner must also emit a nack when a transaction has been proposed but the miner
 
 We propose a soft-fork that defines a new opcode (redefining a NOP opcode) as the OP_COUNT_ACKS using the segwit script versioning system (e.g. version 1 scripts). 
  
-==Specification==
+Specification
+=============
 
 An ack-poll is the process which miners acknowledge the existence of a command authored by a secondary blockchain that orders the release of funds for a certain transaction. At any time there can be zero or more active ack-polls. After a pre-defined number of blocks, an ack-poll deactivates. Each ack-poll is associated with a transaction candidate. A transaction is a candidate while there is an active ack-poll related to it. There can be only one authentic ack-poll related to a transaction candidate. It can be the case that two different secondary blockchains specify the same transaction candidate, but one of them will clearly be unauthentic. A transaction remains a candidate until it is either discarded by the protocol (because it did not represent an authentic command created by the secondary blockchain at the time of expiry) or be included in a block. Miners always try to acknowledge the transactions candidates they have been commanded to. The only reason why a miner may not acknowledge a candidate is due to lack of space to include the proper ack tag in a block, or due to an operative problem.  In case miners do not reach the threshold required to enable the transaction to be included in a block, a new ack-poll can be started for the same transaction candidate. If a maximum period elapses and an enabled transaction is not included in a block, the transaction is disabled and a new ack-poll must take place. To ack for one or more transaction candidates, miners embed the message tag “ACK:” followed by a serialized list secondary blockchains lists, and each followed by a list of acks, in a data structure named FULL_ACK_LIST. The grammar of FULL_ACK_LIST is the following:
 
@@ -248,7 +251,8 @@ scriptSig:
 scriptPub: <empty>
 ``` 
 
-==Rationale==
+Rationale
+=========
 
 The system was designed with the following properties in mind:
 
@@ -303,7 +307,8 @@ Zero risk of cross-secondary chain invalidation
 
 By specifying list sizes as sizes in bytes instead of the number of elements in the for tag serialization, the list of acks corresponding to a tag of an specific secondary blockchain can be skipped if it is malformed. This allows a miner to collect tags from several secondary chains by means of plug-ins and joins them together (adding the appropriate field sizes) without the risk that a malformed tag coming from a secondary blockchain affects the tags provided by the remaining secondary blockchains.
  
-==Backwards Compatibility==
+Backwards Compatibility
+=======================
 
 This BIP represents a soft-fork since it is based on Segwit script versioning system.
 Transactions containing the COUNT_ACKS opcode are non-standard to old implementations, which will (typically) not relay them nor include them in blocks. Witness P2SH addresses can be used to allow the propagation of transactions that use COUNT_ACKS. 
@@ -314,11 +319,13 @@ This BIP will be deployed using a standard majority threshold (as used in previo
 
 If a majority of hashing power does not support the new validation rules, then roll-out will be postponed (or rejected if it becomes clear that a majority will never be achieved).
 
-==Broadcasting a transaction containing OP_ACK_COUNT in scriptPubs==
+Broadcasting a transaction containing OP_ACK_COUNT
+==================================================
 
 Transactions containing the OP_ACK_COUNT in scriptPubs are non-standard and should not be broadcast. Secondary chain designers should use P2SH addresses, so that miners can include the scriptPub scripts in ScriptSig scripts.
 
-==Security==
+Security
+========
 
 The security parameters of a specific secondary chain are defined by the secondary chain designers. Any user wishing to lock bitcoins in order to move them to the secondary chain should use the parameter set specified by the secondary chain designers. 
 If bitcoins are locked for a secondary chain using a different set of parameters, there is no guarantee the secondary chain will accept the transfer and use the locked output in the future to unlock bitcoins. Those bitcoins therefore can be locked forever. Therefore transactions for transfers to secondary chains should be automated by applications and not crafted by hand. 
@@ -336,12 +343,14 @@ There COUNT_ACKS opcode can not be used as a vector to perform a denial-of-servi
  
 In comparison, a script can use up to 400*10K bytes of stack, totalling 4M bytes.
 
-==Computational Cost==
+Computational Cost
+==================
 
 The cost of the COUNT_ACKS opcode in terms of sigops is set to be 2. The rationale of this selection is the following: Performing the ack counting requires fetching at most 144 recent generation transactions. The maximum amount of information that has to be fetched is 7.2K bytes. Assuming the most recent 288 coinbase fields can be kept cached in-memory (either by the OS or by the application), then coinbase fetching CPU cost is comparable to the cost of a single signature check. Assuming no cache, and a 10 msec per coinbase fetching time, the fetching cost becomes prohibitive, unless transaction verification is amortized by parallelization. Therefore, the Bitcoin implementation should cache the coinbase fields of generation transactions. The maximum cost in hashing of tx_hash_preimage values to obtain the corresponding tx_hash values is 432 hash digests, each of a message of size 32. This is comparable to the cost of a single signature verifications.
 Therefore, the accumulated maximum cost is comparable to 2 signature verifications.
 
-==Reference Implementation==
+Reference Implementation
+========================
 
 An open-source reference implementation of COUNT_ACKS drivechain based on segwit, including the coinbase cache system is provided in the following github repository:
 
@@ -357,7 +366,7 @@ This implementation is still incomplete to be a soft-fork. The following changes
 - Replace most occurrences of "(witversion == 0)" with "((witversion == 0) || (witversion == 1))"
 - Replace occurrences of "(sigversion == SIGVERSION_WITNESS_V0)" with "((sigversion == SIGVERSION_WITNESS_V0) || (sigversion == SIGVERSION_WITNESS_V1))"
 
-
-==See Also==
+See Also
+========
 
 * ... todo ...
