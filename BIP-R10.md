@@ -346,8 +346,16 @@ Therefore, the accumulated maximum cost is comparable to 2 signature verificatio
 An open-source reference implementation of COUNT_ACKS drivechain based on segwit, including the coinbase cache system is provided in the following github repository:
 
 https://github.com/rootstock/bitcoin/tree/op-count-acks_devel
-
 (branch op-count-acks_devel)
+
+This implementation is still incomplete to be a soft-fork. The following changes are required:
+
+- Implement soft-fork threshold using VersionBitsState() in ConnectBlock()
+- Define witness script version 1 ( SIGVERSION_WITNESS_V1 = 2)
+- Define constants SCRIPT_VERIFY_DRIVECHAIN and Consensus::DEPLOYMENT_DRIVECHAIN.
+- Add argument witversion to CScript::GetSigOpCount()so it can count the drivechain opcode as 2 signatures.
+- Replace most occurrences of "(witversion == 0)" with "((witversion == 0) || (witversion == 1))"
+- Replace occurrences of "(sigversion == SIGVERSION_WITNESS_V0)" with "((sigversion == SIGVERSION_WITNESS_V0) || (sigversion == SIGVERSION_WITNESS_V1))"
 
 
 ==See Also==
