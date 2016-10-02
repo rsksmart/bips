@@ -303,12 +303,12 @@ Polls created for unknown secondary chains can be safely ignored by miners. Unkn
 Minimum block space consumption
 -------------------------------
 
-By allowing miners to refer to transaction candidates by transaction id prefixes, the space consumption for a single ack can be as low as 2 bytes. Also by requiring a pre-image of the candidate transaction id to be specified by the miner that proposes the candidate we restrict exponentially increase the cost of malicious miners proposing fake transaction ids in order to force the remaining miners to consume more coinbase space. Another possibility to further reduce this risk is to allow miners to scramble their tags with a explicit or implicit bit mask that is used as a key to a lightweight encryption function on transaction candidate ids. But this requires all active candidates to be re-scrambled each block, with increases the processing cost. 
+By allowing miners to refer to transaction candidates by transaction id prefixes, the space consumption for a single ack can be as low as 2 bytes. Also by requiring a pre-image of the candidate transaction id to be specified by the miner that proposes the candidate we exponentially increase the cost of malicious miners proposing fake transaction ids in order to force the remaining miners to consume more coinbase space. Another possibility to further reduce this risk is to allow miners to scramble their tags with a explicit or implicit bit mask that is used as a key to a lightweight encryption function on transaction candidate ids. But this requires all active candidates to be re-scrambled each block, with increases the processing cost. 
 
 Zero risk of cross-secondary chain invalidation
 -----------------------------------------------
 
-By specifying list sizes as sizes in bytes instead of the number of elements in the for tag serialization, the list of acks corresponding to a tag of an specific secondary blockchain can be skipped if it is malformed. This allows a miner to collect tags from several secondary chains by means of plug-ins and joins them together (adding the appropriate field sizes) without the risk that a malformed tag coming from a secondary blockchain affects the tags provided by the remaining secondary blockchains.
+By specifying list sizes as sizes in bytes instead of the number of elements in the for tag serialization, the list of acks corresponding to a tag of an specific secondary blockchain can be skipped if it is malformed. This allows a miner to collect tags from several secondary chains by means of plug-ins and join them together (adding the appropriate field sizes) without the risk that a malformed tag coming from a secondary blockchain affects the tags provided by the remaining secondary blockchains.
  
 Backwards Compatibility
 =======================
@@ -316,7 +316,7 @@ Backwards Compatibility
 This BIP represents a soft-fork since it is based on Segwit script versioning system.
 Transactions containing the COUNT_ACKS opcode are non-standard to old implementations, which will (typically) not relay them nor include them in blocks. Witness P2SH addresses can be used to allow the propagation of transactions that use COUNT_ACKS. 
 
-Miners that do not soft-fork and do not include non-standard transactions are not affected, since no consensus rule is added to the block header or coinbase validation. Miners that do not soft-fork but include non-standard transactions provided that can be delivered by external (possibly malicious) users can be attacked so that their blocks are not accepted by the majority of miners.
+Miners that do not soft-fork and do not include non-standard transactions are not affected, since no consensus rule is added to the block header or coinbase validation. Miners that do not soft-fork but include non-standard transactions that can be delivered by external (possibly malicious) users can be attacked so that their blocks are not accepted by the majority of miners.
 
 This BIP will be deployed using a standard majority threshold (as used in previous soft-forks) and will use the version bits to mark miners acks (as defined in BIPn).
 
