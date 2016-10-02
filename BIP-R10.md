@@ -314,7 +314,7 @@ Backwards Compatibility
 =======================
 
 This BIP represents a soft-fork since it is based on Segwit script versioning system.
-Transactions containing the COUNT_ACKS opcode are non-standard to old implementations, which will (typically) not relay them nor include them in blocks. Witness P2SH addresses can be used to allow the propagation of transactions that use COUNT_ACKS. 
+Transactions containing the COUNT_ACKS opcode are non-standard to old implementations, which will (typically) not relay them nor include them in blocks. Pay-to-witness-script-hash (P2WSH) addresses can be used to allow the propagation of transactions that use COUNT_ACKS. 
 
 Miners that do not soft-fork and do not include non-standard transactions are not affected, since no consensus rule is added to the block header or coinbase validation. Miners that do not soft-fork but include non-standard transactions that can be delivered by external (possibly malicious) users can be attacked so that their blocks are not accepted by the majority of miners.
 
@@ -325,13 +325,13 @@ If a majority of hashing power does not support the new validation rules, then r
 Broadcasting a transaction containing OP_ACK_COUNT
 ==================================================
 
-Transactions containing the OP_ACK_COUNT in scriptPubs are non-standard and should not be broadcast. Secondary chain designers should use P2SH addresses, so that miners can include the scriptPub scripts in ScriptSig scripts.
+Transactions containing the OP_ACK_COUNT in scriptPubs are non-standard and should not be broadcast. Secondary chain designers should use P2WSH addresses, so that miners can include the scriptPub scripts in ScriptSig scripts. Transactions consuming outputs whose scriptPubs require OP_ACK_COUNT are currently also non-standard, and are included in blocks by the same miners that participate in the ack-poll process.
 
 Security
 ========
 
-The security parameters of a specific secondary chain are defined by the secondary chain designers. Any user wishing to lock bitcoins in order to move them to the secondary chain should use the parameter set specified by the secondary chain designers. 
-If bitcoins are locked for a secondary chain using a different set of parameters, there is no guarantee the secondary chain will accept the transfer and use the locked output in the future to unlock bitcoins. Those bitcoins therefore can be locked forever. Therefore transactions for transfers to secondary chains should be automated by applications and not crafted by hand. 
+The security parameters of a specific secondary chain are defined by the secondary chain designers. Any user wishing to lock bitcoins in order to move them to the secondary chain should use the parameter set specified by the secondary chain designers. This is generally done by the secondary chain providing a pay-to-witness-script-hash (P2WSH) address that contains the hash of a script which specifies the arguments.
+If bitcoins are locked for a secondary chain using a different set of parameters, there is no guarantee the secondary chain will accept the transfer and use the locked output in the future to unlock bitcoins. Those bitcoins therefore can be locked forever. Therefore transactions for transfers to secondary chains should either use P2WSH or be automated by applications and not crafted by hand. 
 
 There COUNT_ACKS opcode can not be used as a vector to perform a denial-of-service by exhausting CPU nor exhausting memory since:
 
