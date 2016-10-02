@@ -11,7 +11,7 @@
 Abstract
 ========
 
-This BIP describes the new opcode OP_COUNT_ACKS that adds Bitcoin drivechain capabilities as a soft-fork. A drivechain is practical and low-complexity extension method to add user-defined functionality executed in a secondary blockchain to Bitcoin, by means of a 2-way-peg. Also this drivechain system allows the use of hybrid two-pay pegs, such as combining a drivechain with a set of notary signatures. 
+This BIP describes the new opcode OP_COUNT_ACKS that adds Bitcoin drivechain capabilities as a soft-fork. A drivechain is practical and low-complexity extension method to add user-defined functionality executed in a secondary blockchain to Bitcoin, by means of a 2-way-peg. The drivechain extension proposed allows the creation of flexible two-pay pegs, user-defined acceptance and rejection thresholds, and hybrid solutions such as combining a drivechain with a set of notary signatures.
 
 Motivation
 ==========
