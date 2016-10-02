@@ -1,7 +1,7 @@
 <pre>
   BIP: R10 (internal number, not officially assigned)
   Title: Drivechain using OP_COUNT_ACKS
-  Author: Sergio Demian Lerner <sergio.d.lerner@gmail.com>
+  Author: Sergio Demian Lerner <sergio@rsk.co>
   Status: Draft
   Type: Standards Track
   Created: 2016-09-30
@@ -246,7 +246,7 @@ scriptSig:
 	OP_GREATERTHAN   // more positive than negative acks ?
 	OP_VERIFY	   // abort if not
 	OP_SUB		   // compute positive minus negative, push result into stack
-	72		   // number of diff acks required	
+	72		   // difference (positive-negative) acks required	
 	OP_GREATERTHAN   // More than 50% positive difference, put 1 on stack, else put 0	
 ```	
 
@@ -263,7 +263,7 @@ The system was designed with the following properties in mind:
 2. Zero risk of invalidating a block
 3. No additional computation during blockchain management and re-organization
 4. No change in Bitcoin security model
-5. Bounded computation of polls
+5. Bounded computation of poll results
 6. Strong protection from DoS attacks
 7. Minimum block space consumption
 8. Zero risk of cross-secondary chain invalidation
@@ -288,17 +288,17 @@ No change in Bitcoin security model
 -----------------------------------
 
 By forcing the poll liveness period to be equal or higher than 100 blocks, any consequence of the poll result is only reflected in the blockchain at least 100 blocks after the poll is over. This bound makes the drivechain respect the same maturity rule as coinbases.
-It must be noted that even though the drivechain does not change the security model of bitcoin, any blockchain that uses the bitcoin unit of account and holds a high amount of bitcoins does indeed affect the security of Bitcoin. Also merge-mining can modify the incentives of Bitcoin miners, and those incentives should be analized.
+It must be noted that even though the drivechain does not change the security model of Bitcoin, any blockchain that uses the bitcoin unit of account and holds a high amount of bitcoins does indeed affect the security of Bitcoin. Also merge-mining can modify the incentives of Bitcoin miners, and those incentives should be analysed.
 
-Bounded computation of polls
-----------------------------
+Bounded computation of poll results
+-----------------------------------
 
-The liveness period and ack period limits reduces the depth to which the COUNT_ACKS opcode retrieves coinbase fields. This has two benefits: first sets a bound to the running time of the opcode and second it allows tags in blocks older than the compound limit to be forget and soit is compatible with prunning. 
+The liveness period and ack period limits reduces the depth to which the COUNT_ACKS opcode retrieves coinbase fields. This has two benefits: first sets a bound to the running time of the opcode and, second, it allows tags in blocks older than the compound a limit to be forget and so COUNT_ACKS is compatible with blockchain pruning. 
 
 Strong protection from DoS attacks
 ----------------------------------
 
-Polls created for unknown secondary chains can be safely ignored by miners. Unknown or fake transaction created by malicious miners candidates do interfere with honest candidates nor not require honest miners to add any special information to the ack tags, since any candidate that is omitted from the tag is negatively acknowledged, if the secondary chain id is included.
+Polls created for unknown secondary chains can be safely ignored by miners. Unknown or fake transaction candidates created by malicious miners do interfere with honest candidates nor not they require honest miners to add any special information to the ack tags, since any candidate that is omitted from the tag is negatively acknowledged, when the secondary chain id is included.
 
 Minimum block space consumption
 -------------------------------
